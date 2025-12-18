@@ -1,4 +1,4 @@
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
@@ -65,3 +65,9 @@ class MessageResponse(BaseModel):
     """Schema for generic message response"""
     message: str
     success: bool = True
+
+
+class TeacherListResponse(BaseModel):
+    """Schema for teacher list response"""
+    teachers: List[UserResponse]
+    total: int

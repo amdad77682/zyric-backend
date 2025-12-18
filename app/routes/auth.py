@@ -5,7 +5,8 @@ from app.schemas.user import (
     ForgotPasswordRequest,
     UserResponse,
     LoginResponse,
-    MessageResponse
+    MessageResponse,
+    TeacherListResponse
 )
 from app.utils.auth import hash_password, verify_password, create_access_token
 from app.utils.token import generate_reset_token, get_token_expiry
@@ -247,4 +248,45 @@ async def forgot_password(request: ForgotPasswordRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred processing your request: {str(e)}"
+        )
+
+
+@router.get("/teachers", response_model=TeacherListResponse)
+async def get_teachers():
+    """
+    Get list of all teachers
+    
+    Returns a list of all users with role 'teacher'
+    """
+    try:
+        # Query all teachers from database
+        result = supabase_admin.table("users").select("*").eq("role", "teacher").execute()
+        
+        # Convert to UserResponse objects
+        teachers = []
+        for user in result.data:
+            teachers.append(UserResponse(
+                id=user["id"],
+                email=user["email"],
+                first_name=user["first_name"],
+                last_name=user["last_name"],
+                role=user["role"],
+                teacher_id=user.get("teacher_id"),
+                age=user.get("age"),
+                gender=user.get("gender"),
+                organization=user.get("organization"),
+                profile_image=user.get("profile_image"),
+                is_active=user["is_active"],
+                is_verified=user["is_verified"]
+            ))
+        
+        return TeacherListResponse(
+            teachers=teachers,
+            total=len(teachers)
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred fetching teachers: {str(e)}"
         )
